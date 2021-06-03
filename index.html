@@ -141,7 +141,12 @@
         let response = await fetch(`https://couponview.netmarble.com/coupon/sknightsmmo/${eventId}`);
         let text = await response.text();
         let title = text.split("\r\n").find(l => l.includes("couponEventTitle"));
+        let notice = text.split("\r\n").find(l => l.includes("couponNotice"));
+
         title = /"(?<title>.*?)"/.exec(title).groups.title;
+        let match = notice.match(/(?<year>\d{4})년 (?<month>\d{1,2})월 (?<day>\d{1,2})일/);
+        title = `${title} ~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`
+        notice = `~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`;
 
         document.querySelector("#event-name").innerText = `${title} (${eventId})`;
     }
