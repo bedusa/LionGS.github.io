@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>세나2 쿠폰 자동등록</title>
@@ -13,51 +14,52 @@
       gtag('config', 'G-NJTZY0W968');
     </script> -->
 </head>
+
 <body>
-<span>회원 번호 : </span><input type="text" id="uid">
-<button onclick="req();">쿠폰 사용</button>
-<a target="_blank" rel="noopener noreferrer" href="https://forum.netmarble.com/sk2/view/13/746266">회원 번호 확인 법</a>
-<hr>
+    <span>회원 번호 : </span><input type="text" id="uid">
+    <button onclick="req();">쿠폰 사용</button>
+    <a target="_blank" rel="noopener noreferrer" href="https://forum.netmarble.com/sk2/view/13/746266">회원 번호 확인 법</a>
+    <hr>
 
-<span id="event-name">쿠폰 자동 입력</span><br>
+    <span id="event-name">쿠폰 자동 입력</span><br>
 
-<ul id="events"></ul>
+    <ul id="events"></ul>
 
-<div id="coupons"></div>
+    <div id="coupons"></div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-<link href="https://unpkg.com/tabulator-tables@4.1.4/dist/css/tabulator.min.css" rel="stylesheet">
-<script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.1.4/dist/js/tabulator.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <link href="https://unpkg.com/tabulator-tables@4.1.4/dist/css/tabulator.min.css" rel="stylesheet">
+    <script type="text/javascript" src="https://unpkg.com/tabulator-tables@4.1.4/dist/js/tabulator.min.js"></script>
 
-<script>
-    function setCookie(cookie_name, value, days) {
-      var exdate = new Date();
-      exdate.setDate(exdate.getDate() + days);
+    <script>
+        function setCookie(cookie_name, value, days) {
+            var exdate = new Date();
+            exdate.setDate(exdate.getDate() + days);
 
-      var cookie_value = escape(value) + ((days == null) ? '' : '; expires=' + exdate.toUTCString());
-      document.cookie = cookie_name + '=' + cookie_value;
-    }
-
-    function getCookie(cookie_name) {
-      var x, y;
-      var val = document.cookie.split(';');
-
-      for (var i = 0; i < val.length; i++) {
-        x = val[i].substr(0, val[i].indexOf('='));
-        y = val[i].substr(val[i].indexOf('=') + 1);
-        x = x.replace(/^\s+|\s+$/g, '');
-        if (x == cookie_name) {
-          return unescape(y);
+            var cookie_value = escape(value) + ((days == null) ? '' : '; expires=' + exdate.toUTCString());
+            document.cookie = cookie_name + '=' + cookie_value;
         }
-      }
 
-      return null
-    }
+        function getCookie(cookie_name) {
+            var x, y;
+            var val = document.cookie.split(';');
 
-    let uid = getCookie('uid')
-    if(uid){$('#uid').val(uid)}
+            for (var i = 0; i < val.length; i++) {
+                x = val[i].substr(0, val[i].indexOf('='));
+                y = val[i].substr(val[i].indexOf('=') + 1);
+                x = x.replace(/^\s+|\s+$/g, '');
+                if (x == cookie_name) {
+                    return unescape(y);
+                }
+            }
 
-    var table = new Tabulator("#coupons", {
+            return null
+        }
+
+        let uid = getCookie('uid')
+        if (uid) { $('#uid').val(uid) }
+
+        var table = new Tabulator("#coupons", {
             // data: coupons,           //load row data from array
             reactiveData: true,
             layout: "fitDataFill",      //fit columns to width of table
@@ -68,8 +70,8 @@
             movableColumns: true,      //allow column order to be changed
             resizableRows: true,       //allow row order to be changed
             columns: [                 //define the table columns
-                {title: "No", field: "id", width: 70, editor: false},
-                {title: "Code", field: "code", width: 300, editor: "input"},
+                { title: "No", field: "id", width: 70, editor: false },
+                { title: "Code", field: "code", width: 300, editor: "input" },
                 {
                     title: "status",
                     field: "result",
@@ -79,111 +81,112 @@
                     sorter: "boolean",
                     editor: false
                 },
-                {title: "response", field: "response", width: 180, editor: false},
-                {title: "설명", field: "description", width: 300, editor: false},
+                { title: "response", field: "response", width: 180, editor: false },
+                { title: "설명", field: "description", width: 300, editor: false },
             ],
         });
 
-    let url = new URL(document.URL);
-    let eventId = url.searchParams.get("id");
-    let coupons = [];
+        let url = new URL(document.URL);
+        let eventId = url.searchParams.get("id");
+        let coupons = [];
 
-    function req() {
-        var uid = $('#uid').val()
-        setCookie('uid', uid)
-        for (let coupon of coupons) {
-            $.ajax({
-                type: 'POST',
-                url: `https://couponview.netmarble.com/coupon/sknightsmmo/${eventId}/apply`,
-                data: {
-                    'pid': uid,
-                    'channelCode': 100,
-                    'couponCode': coupon.code,
-                    'worldId': '',
-                    'nickname': ''
-                },
-                success: function (data) {
-                    if (data['resultCode'] === 'SUCCESS') {
-                        coupon.result = 1;
-                        coupon.description = data.rewardItem.rewardTitle;
-                    } else if (data['resultCode'] === 'NOT_EXISTS_PID') {
-                        coupon.description = "회원번호 오류";
-                    } else if (data['resultCode'] === 'COUPON_ALREADY_USE') {
-                        coupon.description = "이미 사용한 쿠폰";
-                    } else if (data['resultCode'] === 'COUPON_WRONG') {
-                        coupon.description = "잘못된 쿠폰 코드";
-                    } else {
-                        coupon.description = "나도 모르는 응답코드";
+        function req() {
+            var uid = $('#uid').val()
+            setCookie('uid', uid)
+            for (let coupon of coupons) {
+                $.ajax({
+                    type: 'POST',
+                    url: `https://couponview.netmarble.com/coupon/sknightsmmo/${eventId}/apply`,
+                    data: {
+                        'pid': uid,
+                        'channelCode': 100,
+                        'couponCode': coupon.code,
+                        'worldId': '',
+                        'nickname': ''
+                    },
+                    success: function (data) {
+                        if (data['resultCode'] === 'SUCCESS') {
+                            coupon.result = 1;
+                            coupon.description = data.rewardItem.rewardTitle;
+                        } else if (data['resultCode'] === 'NOT_EXISTS_PID') {
+                            coupon.description = "회원번호 오류";
+                        } else if (data['resultCode'] === 'COUPON_ALREADY_USE') {
+                            coupon.description = "이미 사용한 쿠폰";
+                        } else if (data['resultCode'] === 'COUPON_WRONG') {
+                            coupon.description = "잘못된 쿠폰 코드";
+                        } else {
+                            coupon.description = "나도 모르는 응답코드";
+                        }
+                        coupon.response = data.resultCode;
+                        table.updateData(coupons);
                     }
-                    coupon.response = data.resultCode;
-                    table.updateData(coupons);
-                }
-            })
+                })
+            }
         }
-    }
 
-    function setData(data) {
-        let id = 1;
-        coupons = data.map(c => { return {id: id++, code: c, result: 0, response: "", description: "요청 전"} })
-        table.replaceData(coupons)
-    }
+        function setData(data) {
+            let id = 1;
+            coupons = data.map(c => { return { id: id++, code: c, result: 0, response: "", description: "요청 전" } })
+            table.replaceData(coupons)
+        }
 
-    async function fetchCoupon() {
-        let response = await fetch(`${eventId}.json`);
-        let data = await response.json();
+        async function fetchCoupon() {
+            let response = await fetch(`${eventId}.json`);
+            let data = await response.json();
 
-        document.querySelector("#event-name").innerText = `${data.name} (${eventId})`;
+            document.querySelector("#event-name").innerText = `${data.name} (${eventId})`;
 
-        setData(data.coupons);
-    }
+            setData(data.coupons);
+        }
 
-    async function getEventTitle() {
-        let response = await fetch(`https://couponview.netmarble.com/coupon/sknightsmmo/${eventId}`);
-        let text = await response.text();
-        let title = text.split("\r\n").find(l => l.includes("couponEventTitle"));
-        let notice = text.split("\r\n").find(l => l.includes("couponNotice"));
+        async function getEventTitle() {
+            let response = await fetch(`https://couponview.netmarble.com/coupon/sknightsmmo/${eventId}`);
+            let text = await response.text();
+            let title = text.split("\r\n").find(l => l.includes("couponEventTitle"));
+            let notice = text.split("\r\n").find(l => l.includes("couponNotice"));
 
-        title = /"(?<title>.*?)"/.exec(title).groups.title;
-        let match = notice.match(/(?<year>\d{4})년 (?<month>\d{1,2})월 (?<day>\d{1,2})일/);
-        title = `${title} ~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`
-        notice = `~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`;
+            title = /"(?<title>.*?)"/.exec(title).groups.title;
+            let match = notice.match(/(?<year>\d{4})년 (?<month>\d{1,2})월 (?<day>\d{1,2})일/);
+            title = `${title} ~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`
+            notice = `~${match.groups.month.padStart(2, "0")}-${match.groups.day.padStart(2, "0")}`;
 
-        document.querySelector("#event-name").innerText = `${title} (${eventId})`;
-    }
+            document.querySelector("#event-name").innerText = `${title} (${eventId})`;
+        }
 
-    async function getEvents() {
-        let response = await fetch("index.json");
-        let data = await response.json();
+        async function getEvents() {
+            let response = await fetch("index.json");
+            let data = await response.json();
 
-        let list = data.map(e => { 
-            let li = document.createElement("li");
-        });
+            let list = data.map(e => {
+                let li = document.createElement("li");
+            });
 
-        let events = document.querySelector("#events");
+            let events = document.querySelector("#events");
 
-        data.forEach(e => {
-            let li = document.createElement("li");
-            let a = document.createElement("a");
-            a.href = `?id=${e.id}`;
-            a.innerText = e.name;
-            li.appendChild(a);
-            events.appendChild(li);
-        });
-    }
+            data.forEach(e => {
+                let li = document.createElement("li");
+                let a = document.createElement("a");
+                a.href = `?id=${e.id}`;
+                a.innerText = e.name;
+                li.appendChild(a);
+                events.appendChild(li);
+            });
+        }
 
-    if (!eventId) {
-        getEvents();
-        document.querySelector("#coupons").hidden = true;
-    } else {
-        let c = url.searchParams.get("c");
-        if (c) {
-            let param = c.split(",");
-            setData(param);
-            getEventTitle();
+        if (!eventId) {
+            getEvents();
+            document.querySelector("#coupons").hidden = true;
         } else {
-            fetchCoupon();
+            let c = url.searchParams.get("c");
+            if (c) {
+                let param = c.split(",");
+                setData(param);
+                getEventTitle();
+            } else {
+                fetchCoupon();
+            }
         }
-    }
-</script>
+    </script>
 </body>
+
 </html>
