@@ -1,0 +1,32 @@
+name: index events
+
+on:
+  push:
+    branches:
+      - main
+      
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: index
+        shell: pwsh
+        run: |
+          Get-ChildItem ./ | ?{ $_ -match "\d+\.json" } | %{
+            $id = $_.BaseName
+            $name = ($_ | Get-Content | ConvertFrom-Json).name
+            
+            @{id=$id; name=$name}
+          } | Sort-Object -Descending -Property id | ConvertTo-Json | Out-File "index.json" -Force
+      - name: commit
+        uses: EndBug/add-and-commit@v7
+        with:
+          #cwd: './path/to/the/repo'
+          add: ./index.json
+          author_name: bot
+          author_email: bot@example.com
+          branch: main
+          message: 'indexing'
+          push: true
